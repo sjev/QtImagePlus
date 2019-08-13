@@ -68,11 +68,12 @@ class QViewer(QGraphicsView):
                 self._contextActions[act](scenePos.x(),scenePos.y())
 
 
-    def loadImage(self,fName):
+    def loadImage(self,fName,opacity=1):
         """ load image from file """
 
         pixmap = QPixmap(fName)
         effect = QGraphicsOpacityEffect()
+        effect.setOpacity(opacity)
 
         item = QGraphicsPixmapItem()
         item.setPixmap(pixmap)
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     viewer = QViewer()
     viewer.loadImage("img/bender.png")
-    viewer.loadImage("img/beer.png")
+    viewer.loadImage("img/beer.png",opacity=0.5)
 
     # add click handler
     viewer.leftMouseButtonPressed.connect(handleLeftClick)
