@@ -14,7 +14,7 @@ The project is inspired by (and contains bits an pieces from):
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QMenu
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMenu, QGraphicsOpacityEffect, QGraphicsPixmapItem
 from PyQt5.QtGui import QPixmap, QTransform
 
 ZOOM_FACTOR = 1.25
@@ -72,7 +72,13 @@ class QViewer(QGraphicsView):
         """ load image from file """
 
         pixmap = QPixmap(fName)
-        self.scene.addPixmap(pixmap)
+        effect = QGraphicsOpacityEffect()
+
+        item = QGraphicsPixmapItem()
+        item.setPixmap(pixmap)
+        item.setGraphicsEffect(effect)
+
+        self.scene.addItem(item)
 
     def wheelEvent(self, event):
 
@@ -141,6 +147,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     viewer = QViewer()
     viewer.loadImage("img/bender.png")
+    viewer.loadImage("img/beer.png")
 
     # add click handler
     viewer.leftMouseButtonPressed.connect(handleLeftClick)
