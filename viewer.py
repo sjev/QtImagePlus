@@ -15,9 +15,16 @@ The project is inspired by (and contains bits an pieces from):
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMenu, QGraphicsOpacityEffect, QGraphicsPixmapItem
-from PyQt5.QtGui import QPixmap, QTransform
+from PyQt5.QtGui import QPixmap, QImage, QTransform
+
+from pathlib import Path
+import qimage2ndarray as q2a
+import numpy as np
 
 ZOOM_FACTOR = 1.25
+
+def float2uint8(img):
+    return (img*255).astype(np.uint8)
 
 class QViewer(QGraphicsView):
 
@@ -68,18 +75,35 @@ class QViewer(QGraphicsView):
                 self._contextActions[act](scenePos.x(),scenePos.y())
 
 
-    def loadImage(self,fName,opacity=1):
-        """ load image from file """
+    def addPixmap(self,pixmap,opacity=1):
+        """ add pixmap to scene """
 
-        pixmap = QPixmap(fName)
         effect = QGraphicsOpacityEffect()
         effect.setOpacity(opacity)
 
         item = QGraphicsPixmapItem()
         item.setPixmap(pixmap)
         item.setGraphicsEffect(effect)
-
         self.scene.addItem(item)
+
+    def addImage(self,img):
+        """ set image, accepts multiple formats """
+
+        if isinstance(img,np.ndarray): # numpy array
+            if img.dtype == np.float:
+                image = q2a.array2qimage(float2uint8(img))
+            else:
+                image = q2a.array2qimage(img)
+            pixmap = QPixmap.fromImage(image)
+        elif isinstance(img,str): # path to image file
+            pixmap = QPixmap(img)
+        elif isinstance(img,QImage): # QImage input
+            pixmap = QPixmap.fromImage(image)
+        else:
+            raise ValueError('Incorrect input, must be ndarray, QImage or str')
+
+        self.addPixmap(pixmap)
+
 
     def wheelEvent(self, event):
 
@@ -131,6 +155,8 @@ if __name__ == '__main__':
 
     import sys
     from PyQt5.QtWidgets import QApplication
+    from testdata import TestData
+
     print('Using Qt ' + QtCore.QT_VERSION_STR)
 
     def handleLeftClick(x, y):
@@ -144,11 +170,15 @@ if __name__ == '__main__':
     def bar(x,y):
         print('bar',x,y)
 
+    # create test data
+    tst = TestData()
+
     # Create the application.
     app = QApplication(sys.argv)
     viewer = QViewer()
-    viewer.loadImage("img/bender.png")
-    viewer.loadImage("img/beer.png",opacity=0.5)
+    viewer.addImage(tst.image)
+    viewer.addImage(tst.overlay)
+    #viewer.addImage("img/beer.png")
 
     # add click handler
     viewer.leftMouseButtonPressed.connect(handleLeftClick)
